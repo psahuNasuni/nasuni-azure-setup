@@ -1,0 +1,12 @@
+# *.tfvars
+cmd
+.aws
+# .gitignore
+*.tfstate*
+.terraform
+*.txt
+*.lock.*
+*.sh
+*.zip
+*copy.*
+
