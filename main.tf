@@ -1,4 +1,4 @@
-#data "azurerm_client_config" "current" {}
+data "azurerm_client_config" "current" {}
 data "azurerm_subscription" "current" {}
 
 data "azuread_service_principal" "current" {
@@ -7,6 +7,88 @@ data "azuread_service_principal" "current" {
 
 data "azurerm_resource_group" "vault_rg" {
   name = var.edgeappliance-resource-group
+}
+
+resource "random_id" "nac_unique_stack_id" {
+  byte_length = 4
+}
+
+data "azurerm_virtual_network" "VnetToBeUsed" {
+  count               = var.use-private-ip == "Y" ? 1 : 0
+  name                = var.user-vnet-name
+  resource_group_name = var.networking-resource-group
+}
+
+data "azurerm_subnet" "azure_subnet_name" {
+  count                = var.use-private-ip == "Y" ? 1 : 0
+  name                 = var.user_subnet_name
+  virtual_network_name = data.azurerm_virtual_network.VnetToBeUsed[0].name
+  resource_group_name  = data.azurerm_virtual_network.VnetToBeUsed[0].resource_group_name
+}
+
+data "azurerm_private_dns_zone" "storage_account_dns_zone" {
+  count               = var.use_private_acs == "Y" ? 1 : 0
+  name                = "privatelink.blob.core.windows.net"
+  resource_group_name = data.azurerm_virtual_network.VnetToBeUsed[0].resource_group_name
+}
+
+resource "azurerm_storage_account" "storage" {
+  name                     = var.storage_account_name
+  resource_group_name      = var.networking-resource-group
+  location                 = data.azurerm_virtual_network.VnetToBeUsed[0].location
+  account_tier             = "Standard"
+  account_replication_type = "LRS"
+  # allow_blob_public_access = true
+}
+
+resource "azurerm_private_endpoint" "storage_account_private_endpoint" {
+  count               = var.use_private_acs == "Y" ? 1 : 0
+  name                = "nasunist${random_id.nac_unique_stack_id.hex}_private_endpoint"
+  location            = data.azurerm_virtual_network.VnetToBeUsed[0].location
+  resource_group_name = data.azurerm_virtual_network.VnetToBeUsed[0].resource_group_name
+  subnet_id           = data.azurerm_subnet.azure_subnet_name[0].id
+
+  private_dns_zone_group {
+    name                 = "default"
+    private_dns_zone_ids = [data.azurerm_private_dns_zone.storage_account_dns_zone[0].id]
+  }
+
+  private_service_connection {
+    name                           = "nasunist${random_id.nac_unique_stack_id.hex}_connection"
+    is_manual_connection           = false
+    private_connection_resource_id = azurerm_storage_account.storage.id
+    subresource_names              = ["blob"]
+  }
+
+  provisioner "local-exec" {
+    command = "az resource wait --updated --ids ${self.subnet_id}"
+  }
+}
+
+resource "azurerm_storage_container" "container" {
+  name                  = var.storage_container_name
+  storage_account_name  = azurerm_storage_account.storage.name
+  container_access_type = "container" # "blob" "private"
+}
+
+resource "azurerm_storage_blob" "blob" {
+  name                   = "sample.pgp"
+  storage_account_name   = azurerm_storage_account.storage.name
+  storage_container_name = azurerm_storage_container.container.name
+  type                   = "Block"
+  #source                 = "commands.sh"
+}
+
+resource "null_resource" "pem-key-generation" {
+  provisioner "local-exec" {
+    command     = "chmod +x ${path.cwd}/pem-generation.sh; ${path.cwd}/./pem-generation.sh"
+    interpreter = ["bash", "-c"]
+  }
+  provisioner "local-exec" {
+    when    = destroy
+    command = "rm -rf *_key.*"
+  }
+  depends_on = [data.azuread_service_principal.current]
 }
 
 resource "azurerm_key_vault" "user_vault" {
@@ -30,7 +112,8 @@ resource "azurerm_key_vault" "user_vault" {
       "Backup"
     ]
   }
-  depends_on = [data.azuread_service_principal.current]
+  #depends_on = [data.azuread_service_principal.current]
+  depends_on = [resource.null_resource.pem-key-generation]
 }
 
 resource "azurerm_key_vault_secret" "azure-location" {

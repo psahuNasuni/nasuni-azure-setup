@@ -4,6 +4,28 @@ variable "user-vnet-name" {
   default     = ""
 }
 
+variable "user_subnet_name" {
+  description = "Available subnet name"
+  type        = string
+  default     = "default"
+}
+
+variable "use_private_acs" {
+  description = "Use Private ACS"
+  type        = string
+  default     = "N"
+}
+
+variable "storage_account_name" {
+  type        = string
+  description = "Storage Account name in Azure"
+}
+
+variable "storage_container_name" {
+  type        = string
+  description = "Storage Container name in Azure"
+}
+
 variable "pem-key-path" {
   description = "Key Name with extension and location"
   type        = string
