@@ -10,8 +10,8 @@ variable "user_subnet_name" {
   default     = "default"
 }
 
-variable "use_private_acs" {
-  description = "Use Private ACS"
+variable "use_private_flow" {
+  description = "Use Private flow"
   type        = string
   default     = "N"
 }
@@ -29,7 +29,7 @@ variable "storage_container_name" {
 variable "pem-key-path" {
   description = "Key Name with extension and location"
   type        = string
-  default     = "pk-azure-key.pem"
+  default     = ""
 }
 
 variable "cred-vault" {
@@ -111,4 +111,8 @@ variable "web-access-appliance-address" {
   type    = string
   default = ""
 }
-
+variable "pgp-key-path" {
+  description = "Key Name with extension and location"
+  type        = string
+  default     = ""
+}
