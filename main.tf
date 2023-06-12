@@ -87,20 +87,12 @@ resource "azurerm_storage_container" "container" {
   container_access_type = "container" # "blob" "private"
 }
 
-data "local_file" "pgp-key-details" {
-  filename = var.pgp-key-path
-}
-locals {
-
-  blob_name   = basename(data.local_file.pgp-key-details.filename)
-  blob_source = data.local_file.pgp-key-details.filename
-}
 resource "azurerm_storage_blob" "blob" {
-  name                   = local.blob_name
+  name                   = var.pgp-key
   storage_account_name   = azurerm_storage_account.storage.name
   storage_container_name = azurerm_storage_container.container.name
   type                   = "Block"
-  source                 = local.blob_source
+  source                 = var.pgp-key-path
 }
 
 resource "null_resource" "pem-key-generation" {
