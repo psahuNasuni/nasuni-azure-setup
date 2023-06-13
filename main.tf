@@ -87,13 +87,15 @@ resource "azurerm_storage_container" "volume_key_container" {
   container_access_type = "container" # "blob" "private"
   depends_on            = [azurerm_storage_account.volume_storage]
 }
-
+data "local_file" "d-path" {
+  filename = "${var.pgp-key-path}"
+}
 resource "azurerm_storage_blob" "volume_key_blob" {
-  name                   = basename(var.pgp-key-path)
+  name                   = data.local_file.d-path.filename
   storage_account_name   = azurerm_storage_account.volume_storage.name
   storage_container_name = azurerm_storage_container.volume_key_container.name
   type                   = "Block"
-  source                 = var.pgp-key-path
+  source                 = data.local_file.d-path.content
   depends_on             = [azurerm_storage_container.volume_key_container]
 }
 
