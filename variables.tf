@@ -5,9 +5,9 @@ variable "user-vnet-name" {
 }
 
 variable "user_subnet_name" {
-  description = "Available subnet name"
+  description = "Subnet name, where "
   type        = string
-  default     = "default"
+  default     = ""
 }
 
 variable "use_private_flow" {
@@ -16,15 +16,16 @@ variable "use_private_flow" {
   default     = "N"
 }
 
-variable "storage_account_name" {
-  type        = string
-  description = "Storage Account name in Azure"
-}
+# variable "storage_account_name" {
+#   type        = string
+#   description = "Storage Account name in Azure"
+#   default = ""
+# }
 
-variable "storage_container_name" {
-  type        = string
-  description = "Storage Container name in Azure"
-}
+# variable "storage_container_name" {
+#   type        = string
+#   description = "Storage Container name in Azure"
+# }
 
 variable "pem-key-path" {
   description = "Key Name with extension and location"
@@ -82,14 +83,10 @@ variable "product-key" {
   default = ""
 }
 
-variable "sp-application-id" {
-  type    = string
-  default = ""
-}
-
 variable "sp-secret" {
-  type    = string
-  default = ""
+  type        = string
+  description = "Application ID of the Service Principal user"
+  default     = ""
 }
 
 variable "use-private-ip" {
@@ -116,8 +113,8 @@ variable "pgp-key-path" {
   type        = string
   default     = ""
 }
-variable "pgp-key" {
-  description = "Key Name with extension and location"
-  type        = string
-  default     = ""
-}
+# variable "pgp-key" {
+#   description = "Key Name with extension and location"
+#   type        = string
+#   default     = ""
+# }
