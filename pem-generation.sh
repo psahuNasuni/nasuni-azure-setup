@@ -4,7 +4,7 @@ create_pem(){
 PEM_FILE_NAME= "$1"
 pwd
 ls -a
-ssh-keygen -m PEM -t rsa -b 4096 -f ./${PEM_FILE_NAME}
+ssh-keygen -m PEM -t rsa -b 4096 -f ./${PEM_FILE_NAME} -N nasunipassphrase
 ls -a
 
 }
