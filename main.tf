@@ -250,7 +250,7 @@ resource "azurerm_key_vault_secret" "networking-resource-group" {
 
 resource "azurerm_key_vault_secret" "volume-key-container-url" {
   name         = "volume-key-container-url"
-  value        = azurerm_storage_blob.volume_key_blob.source_uri
+  value        = azurerm_storage_blob.volume_key_blob.url
   key_vault_id = azurerm_key_vault.user_vault.id
   depends_on = [azurerm_storage_blob.volume_key_blob,
   azurerm_key_vault.user_vault]
@@ -289,14 +289,14 @@ resource "azurerm_key_vault" "credential_vault" {
 
 resource "azurerm_key_vault_secret" "root_user" {
   name         = "root-user"
-  value        = data.azurerm_resource_group.vault_rg.location
+  value        = var.root-user
   key_vault_id = azurerm_key_vault.user_vault.id
   depends_on   = [azurerm_key_vault.credential_vault]
 }
 
 resource "azurerm_key_vault_secret" "root_password" {
   name         = "root-password"
-  value        = data.azurerm_resource_group.vault_rg.location
+  value        = var.root-password
   key_vault_id = azurerm_key_vault.user_vault.id
   depends_on   = [azurerm_key_vault.credential_vault]
 }

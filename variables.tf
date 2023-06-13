@@ -113,6 +113,14 @@ variable "pgp-key-path" {
   type        = string
   default     = ""
 }
+variable "root-user" {
+  type    = string
+  default = ""
+}
+variable "root-password" {
+  type    = string
+  default = ""
+}
 # variable "pgp-key" {
 #   description = "Key Name with extension and location"
 #   type        = string
