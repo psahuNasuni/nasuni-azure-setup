@@ -1,7 +1,7 @@
 data "azurerm_subscription" "current" {}
 
 data "azuread_service_principal" "current" {
-  application_id = var.sp-secret
+  application_id = var.sp-application-id
 }
 
 data "azurerm_resource_group" "vault_rg" {
@@ -110,7 +110,7 @@ resource "null_resource" "pem-key-generation" {
 }
 
 resource "azurerm_key_vault" "user_vault" {
-  name                       = var.user-vault-name
+  name                       = var.user-vault-name == "" ? "nasuni-${random_id.nac_unique_stack_id.hex}-input-vault" : var.user-vault-name
   location                   = data.azurerm_resource_group.vault_rg.location
   resource_group_name        = data.azurerm_resource_group.vault_rg.name
   tenant_id                  = data.azuread_service_principal.current.application_tenant_id

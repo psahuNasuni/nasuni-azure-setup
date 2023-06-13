@@ -85,6 +85,12 @@ variable "product-key" {
 
 variable "sp-secret" {
   type        = string
+  description = "Application secret of the Service Principal user"
+  default     = ""
+}
+
+variable "sp-application-id" {
+  type        = string
   description = "Application ID of the Service Principal user"
   default     = ""
 }
