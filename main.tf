@@ -33,7 +33,7 @@ data "azurerm_private_dns_zone" "storage_account_dns_zone" {
 
 ### Volume Storage account will be created for both Private Flow and Public Flow
 resource "azurerm_storage_account" "volume_storage" {
-  name                     = "nasunivolst${random_id.nac_unique_stack_id.hex}"
+  name                     = "nasunivolst${random_id.nac_unique_stack_id.dec}"
   resource_group_name      = data.azurerm_resource_group.vault_rg.name
   location                 = data.azurerm_resource_group.vault_rg.location
   account_tier             = "Standard"
@@ -54,7 +54,7 @@ resource "null_resource" "disable_storage_public_access" {
 
 resource "azurerm_private_endpoint" "storage_account_private_endpoint" {
   count               = var.use_private_flow == "Y" ? 1 : 0
-  name                = "nasunist${random_id.nac_unique_stack_id.hex}_private_endpoint"
+  name                = "nasunist${random_id.nac_unique_stack_id.dec}_private_endpoint"
   location            = azurerm_storage_account.volume_storage.location
   resource_group_name = azurerm_storage_account.volume_storage.resource_group_name
   subnet_id           = data.azurerm_subnet.azure_subnet_name[0].id
@@ -65,7 +65,7 @@ resource "azurerm_private_endpoint" "storage_account_private_endpoint" {
   }
 
   private_service_connection {
-    name                           = "nasunist${random_id.nac_unique_stack_id.hex}_connection"
+    name                           = "nasunist${random_id.nac_unique_stack_id.dec}_connection"
     is_manual_connection           = false
     private_connection_resource_id = azurerm_storage_account.volume_storage.id
     subresource_names              = ["blob"]
@@ -112,7 +112,7 @@ resource "null_resource" "pem-key-generation" {
 }
 
 resource "azurerm_key_vault" "user_vault" {
-  name                       = var.user-vault-name == "" ? "nasuni-${random_id.nac_unique_stack_id.hex}-input-vault" : var.user-vault-name
+  name                       = var.user-vault-name == "" ? "nasuni-${random_id.nac_unique_stack_id.dec}-input-vault" : var.user-vault-name
   location                   = data.azurerm_resource_group.vault_rg.location
   resource_group_name        = data.azurerm_resource_group.vault_rg.name
   tenant_id                  = data.azuread_service_principal.current.application_tenant_id
@@ -153,7 +153,7 @@ resource "azurerm_key_vault_secret" "azure-subscription" {
 }
 
 resource "azurerm_key_vault_secret" "cred-vault" {
-  name         = "cred-vault"
+  name         = "nasuni-${random_id.nac_unique_stack_id.dec}-credvault" 
   value        = azurerm_key_vault.credential_vault.name
   key_vault_id = azurerm_key_vault.user_vault.id
   depends_on   = [azurerm_key_vault.user_vault]
