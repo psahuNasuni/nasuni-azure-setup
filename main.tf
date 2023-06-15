@@ -12,6 +12,10 @@ resource "random_id" "nac_unique_stack_id" {
   byte_length = 4
 }
 
+locals {
+  pem_file_name = "${var.nac-scheduler-name}.pem"
+}
+
 data "azurerm_virtual_network" "VnetToBeUsed" {
   count               = var.use-private-ip == "Y" ? 1 : 0
   name                = var.user-vnet-name
@@ -26,7 +30,7 @@ data "azurerm_subnet" "azure_subnet_name" {
 }
 
 data "azurerm_private_dns_zone" "storage_account_dns_zone" {
-  count               = var.use_private_flow == "Y" ? 1 : 0
+  count               = var.use-private-ip == "Y" ? 1 : 0
   name                = "privatelink.blob.core.windows.net"
   resource_group_name = data.azurerm_virtual_network.VnetToBeUsed[0].resource_group_name
 }
@@ -47,13 +51,13 @@ resource "azurerm_storage_account" "volume_storage" {
 
 resource "null_resource" "disable_storage_public_access" {
   provisioner "local-exec" {
-    command = var.use_private_flow == "Y" ? "az storage account update --allow-blob-public-access false --name ${azurerm_storage_account.volume_storage.name} --resource-group ${azurerm_storage_account.volume_storage.resource_group_name}" : "echo 'INFO ::: Storage Account is Public...'"
+    command = var.use-private-ip == "Y" ? "az storage account update --allow-blob-public-access false --name ${azurerm_storage_account.volume_storage.name} --resource-group ${azurerm_storage_account.volume_storage.resource_group_name}" : "echo 'INFO ::: Storage Account is Public...'"
   }
   depends_on = [azurerm_storage_account.volume_storage]
 }
 
 resource "azurerm_private_endpoint" "storage_account_private_endpoint" {
-  count               = var.use_private_flow == "Y" ? 1 : 0
+  count               = var.use-private-ip == "Y" ? 1 : 0
   name                = "nasunist${random_id.nac_unique_stack_id.dec}_private_endpoint"
   location            = azurerm_storage_account.volume_storage.location
   resource_group_name = azurerm_storage_account.volume_storage.resource_group_name
@@ -87,21 +91,19 @@ resource "azurerm_storage_container" "volume_key_container" {
   container_access_type = "container" # "blob" "private"
   depends_on            = [azurerm_storage_account.volume_storage]
 }
-data "local_file" "d-path" {
-  filename = "${var.pgp-key-path}"
-}
+
 resource "azurerm_storage_blob" "volume_key_blob" {
-  name                   = data.local_file.d-path.filename
+  name                   = basename(var.pgp-key-path)
   storage_account_name   = azurerm_storage_account.volume_storage.name
   storage_container_name = azurerm_storage_container.volume_key_container.name
   type                   = "Block"
-  source                 = data.local_file.d-path.content
+  source                 = var.pgp-key-path
   depends_on             = [azurerm_storage_container.volume_key_container]
 }
 
 resource "null_resource" "pem-key-generation" {
   provisioner "local-exec" {
-    command     = "chmod +x ${path.cwd}/pem-generation.sh; ${path.cwd}/./pem-generation.sh"
+    command     = "chmod +x ${path.cwd}/pem-generation.sh; ${path.cwd}/./pem-generation.sh ${local.pem_file_name}"
     interpreter = ["bash", "-c"]
   }
   provisioner "local-exec" {
@@ -148,13 +150,6 @@ resource "azurerm_key_vault_secret" "azure-location" {
 resource "azurerm_key_vault_secret" "azure-subscription" {
   name         = "azure-subscription"
   value        = data.azurerm_subscription.current.subscription_id
-  key_vault_id = azurerm_key_vault.user_vault.id
-  depends_on   = [azurerm_key_vault.user_vault]
-}
-
-resource "azurerm_key_vault_secret" "cred-vault" {
-  name         = "nasuni-${random_id.nac_unique_stack_id.dec}-credvault" 
-  value        = azurerm_key_vault.credential_vault.name
   key_vault_id = azurerm_key_vault.user_vault.id
   depends_on   = [azurerm_key_vault.user_vault]
 }
@@ -210,7 +205,7 @@ resource "azurerm_key_vault_secret" "nmc-api-username" {
 
 resource "azurerm_key_vault_secret" "pem-key-path" {
   name         = "pem-key-path"
-  value        = var.pem-key-path
+  value        = "${path.cwd}/${local.pem_file_name}"
   key_vault_id = azurerm_key_vault.user_vault.id
   depends_on   = [azurerm_key_vault.user_vault]
 }
@@ -267,7 +262,7 @@ resource "azurerm_key_vault_secret" "web-access-appliance-address" {
 ############################# Provision Credential Vault ################
 
 resource "azurerm_key_vault" "credential_vault" {
-  name                       = var.cred-vault
+  name                       = var.cred-vault == "" ? "nasuni-cred-vault-${random_id.nac_unique_stack_id.dec}" : var.cred-vault
   location                   = data.azurerm_resource_group.vault_rg.location
   resource_group_name        = data.azurerm_resource_group.vault_rg.name
   tenant_id                  = data.azuread_service_principal.current.application_tenant_id
@@ -292,13 +287,20 @@ resource "azurerm_key_vault" "credential_vault" {
 resource "azurerm_key_vault_secret" "root_user" {
   name         = "root-user"
   value        = var.root-user
-  key_vault_id = azurerm_key_vault.user_vault.id
+  key_vault_id = azurerm_key_vault.credential_vault.id
   depends_on   = [azurerm_key_vault.credential_vault]
 }
 
 resource "azurerm_key_vault_secret" "root_password" {
   name         = "root-password"
   value        = var.root-password
-  key_vault_id = azurerm_key_vault.user_vault.id
+  key_vault_id = azurerm_key_vault.credential_vault.id
   depends_on   = [azurerm_key_vault.credential_vault]
+}
+
+resource "azurerm_key_vault_secret" "cred-vault" {
+  name         = "cred-vault"
+  value        = azurerm_key_vault.credential_vault.name
+  key_vault_id = azurerm_key_vault.user_vault.id
+  depends_on   = [azurerm_key_vault.user_vault, azurerm_key_vault.credential_vault]
 }
