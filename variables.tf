@@ -13,12 +13,13 @@ variable "user_subnet_name" {
 variable "cred-vault" {
   description = "Credential Key Vault Name"
   type        = string
+  default     = ""
 }
 
-variable "destination-container-url" {
+/* variable "destination-container-url" {
   description = "Destination Storage Account Container URL"
   type        = string
-}
+} */
 
 variable "github-organization" {
   description = "GitHub Organization Name"
@@ -54,6 +55,7 @@ variable "nmc-api-username" {
 variable "user-vault-name" {
   description = "Name of User Input Key Vault"
   type        = string
+  default     = ""
 }
 
 variable "product-key" {
