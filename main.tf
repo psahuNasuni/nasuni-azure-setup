@@ -9,7 +9,7 @@ data "azurerm_resource_group" "vault_rg" {
 }
 
 resource "random_id" "nac_unique_stack_id" {
-  byte_length = 4
+  byte_length = 2
 }
 
 locals {
@@ -102,6 +102,12 @@ resource "azurerm_storage_blob" "volume_key_blob" {
 }
 
 resource "null_resource" "pem-key-generation" {
+  count = var.create-pem-key ? 1 : 0
+  
+  triggers = {
+    create_pem_key = var.create-pem-key
+  }
+
   provisioner "local-exec" {
     command     = "chmod +x ${path.cwd}/pem-generation.sh; ${path.cwd}/./pem-generation.sh ${local.pem_file_name}"
     interpreter = ["bash", "-c"]

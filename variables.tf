@@ -16,11 +16,6 @@ variable "cred-vault" {
   default     = ""
 }
 
-/* variable "destination-container-url" {
-  description = "Destination Storage Account Container URL"
-  type        = string
-} */
-
 variable "github-organization" {
   description = "GitHub Organization Name"
   type        = string
@@ -77,6 +72,12 @@ variable "use-private-ip" {
   description = "To Provision the Infrastrure in Private or Public Network"
   type        = string
   default     = "N"
+}
+
+variable "create-pem-key" {
+  description = "Set to true to create a PEM key, false otherwise"
+  type        = bool
+  default     = false
 }
 
 variable "networking-resource-group" {
