@@ -160,13 +160,6 @@ resource "azurerm_key_vault_secret" "azure-subscription" {
   depends_on   = [azurerm_key_vault.user_vault]
 }
 
-/* resource "azurerm_key_vault_secret" "destination-container-url" {
-  name         = "destination-container-url"
-  value        = var.destination-container-url
-  key_vault_id = azurerm_key_vault.user_vault.id
-  depends_on   = [azurerm_key_vault.user_vault]
-} */
-
 resource "azurerm_key_vault_secret" "github-organization" {
   name         = "github-organization"
   value        = var.github-organization
