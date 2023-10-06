@@ -9,7 +9,7 @@ data "azurerm_resource_group" "vault_rg" {
 }
 
 resource "random_id" "nac_unique_stack_id" {
-  byte_length = 4
+  byte_length = 2
 }
 
 locals {
@@ -102,6 +102,12 @@ resource "azurerm_storage_blob" "volume_key_blob" {
 }
 
 resource "null_resource" "pem-key-generation" {
+  count = var.create-pem-key ? 1 : 0
+  
+  triggers = {
+    create_pem_key = var.create-pem-key
+  }
+
   provisioner "local-exec" {
     command     = "chmod +x ${path.cwd}/pem-generation.sh; ${path.cwd}/./pem-generation.sh ${local.pem_file_name}"
     interpreter = ["bash", "-c"]
@@ -150,13 +156,6 @@ resource "azurerm_key_vault_secret" "azure-location" {
 resource "azurerm_key_vault_secret" "azure-subscription" {
   name         = "azure-subscription"
   value        = data.azurerm_subscription.current.subscription_id
-  key_vault_id = azurerm_key_vault.user_vault.id
-  depends_on   = [azurerm_key_vault.user_vault]
-}
-
-resource "azurerm_key_vault_secret" "destination-container-url" {
-  name         = "destination-container-url"
-  value        = var.destination-container-url
   key_vault_id = azurerm_key_vault.user_vault.id
   depends_on   = [azurerm_key_vault.user_vault]
 }

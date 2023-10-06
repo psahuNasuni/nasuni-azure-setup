@@ -1,4 +1,3 @@
-destination-container-url    = "<<destination-container-url>>"
 edgeappliance-resource-group = "edgeappliance-rg-pk"
 github-organization          = "<<github-organization>>"
 nac-scheduler-name           = "nac-scheduler-pk"
@@ -11,6 +10,7 @@ product-key                  = "<<product-key>>"
 sp-secret                    = "<<sp-secret>>"
 sp-application-id            = "<<sp-application-id>>"
 use-private-ip               = "<< N/Y >>"
+create-pem-key               = <<true/false>>
 user-vnet-name               = "workshop-pk-vnet"
 web-access-appliance-address = "<<web-access-appliance-address>>"
 root-user                    = "<<root-user>>"

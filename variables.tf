@@ -13,11 +13,7 @@ variable "user_subnet_name" {
 variable "cred-vault" {
   description = "Credential Key Vault Name"
   type        = string
-}
-
-variable "destination-container-url" {
-  description = "Destination Storage Account Container URL"
-  type        = string
+  default     = ""
 }
 
 variable "github-organization" {
@@ -54,6 +50,7 @@ variable "nmc-api-username" {
 variable "user-vault-name" {
   description = "Name of User Input Key Vault"
   type        = string
+  default     = ""
 }
 
 variable "product-key" {
@@ -75,6 +72,12 @@ variable "use-private-ip" {
   description = "To Provision the Infrastrure in Private or Public Network"
   type        = string
   default     = "N"
+}
+
+variable "create-pem-key" {
+  description = "Set to true to create a PEM key, false otherwise"
+  type        = bool
+  default     = false
 }
 
 variable "networking-resource-group" {
